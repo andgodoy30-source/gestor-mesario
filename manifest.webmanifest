@@ -1,0 +1,11 @@
+{
+  "name": "Mesário COPA CAP",
+  "short_name": "Mesário CAP",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#eef3f8",
+  "theme_color": "#102a43",
+  "description": "Súmula offline para mesários da COPA CAP."
+}
