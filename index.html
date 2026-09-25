@@ -8,12 +8,30 @@
 .modal-edit-bg{position:fixed;inset:0;background:rgba(0,0,0,.58);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px}
 .modal-edit{background:#fff;width:min(520px,100%);max-height:92vh;overflow:auto;border-radius:16px;padding:20px;box-sizing:border-box;color:#17212b}
 .modal-edit label{display:block;font-weight:700;margin-top:10px}.modal-edit select,.modal-edit input,.modal-edit textarea{width:100%;box-sizing:border-box;margin-top:5px}
-</style></head>
-<body><header><h1>Mesário COPA CAP</h1><small>V0.5.1 • Offline</small></header><main class="wrap">
+</style>
+<style>
+/* V0.5.2 — súmula alinhada visualmente ao Gestor */
+#app>.card:first-child{border-top:4px solid #1261a0}
+.sumula-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.meta-card{background:#f4f7fa;border:1px solid #d9e3ec;border-radius:10px;padding:9px 11px}
+.meta-card strong{display:block;font-size:11px;text-transform:uppercase;color:#52606d;margin-bottom:3px}
+.meta-card span{font-weight:800;color:#102a43}
+.game-local{font-size:13px;color:#52606d;margin:0 0 10px}
+.grid>.card>h2{font-size:18px;margin:2px 0 10px;padding-bottom:9px;border-bottom:2px solid #e5edf4}
+.player{background:#fbfcfe;padding:8px;border-radius:8px;margin-bottom:5px;border:1px solid #e4ebf2}
+.player input{background:#fff}
+#ec,#ef{margin-top:12px}
+#ec h3,#ef h3{font-size:14px;margin:13px 0 6px;color:#334e68}
+.restart-row{display:flex;justify-content:center;margin-top:10px;padding-top:10px;border-top:1px solid #e5edf4}
+.restart{background:#fff;color:#a32121;border:1px solid #dca7a7;padding:9px 12px;font-size:13px}
+@media(max-width:720px){.sumula-meta{grid-template-columns:1fr 1fr 1fr}.meta-card{padding:7px}.meta-card span{font-size:12px}.restart{width:100%}}
+</style>
+</head>
+<body><header><h1>Mesário COPA CAP</h1><small>V0.5.2 • Offline</small></header><main class="wrap">
 <section id="entrada" class="card"><h2>Carregar partida</h2><p>Selecione o arquivo JSON exportado pelo Gestor de Campeonatos.</p><input id="arquivo" type="file" accept=".json,application/json"><div class="actions" style="margin-top:10px"><button class="primary" onclick="carregarArquivo()">Abrir partida</button><button class="light" onclick="restaurar()">Restaurar partida salva</button></div><div class="notice">Os registros ficam salvos neste aparelho durante o jogo.</div></section>
 <section id="app" class="hidden">
 <div class="card"><div id="meta"></div><div class="score"><div class="team" id="casaNome"></div><div class="placar"><span id="pc">0</span> x <span id="pf">0</span></div><div class="team" id="foraNome"></div></div>
-<div style="text-align:center;font-weight:800" id="periodo">1º Tempo</div><div class="timer" id="timer">00:00</div><div class="actions" style="justify-content:center"><button class="green" onclick="iniciar()">Iniciar</button><button class="amber" onclick="pausar()">Pausar</button><button class="light" onclick="zerar()">Zerar</button><button class="purple" id="btnPeriodo" onclick="avancarPeriodo()">Encerrar 1º Tempo</button></div></div>
+<div style="text-align:center;font-weight:800" id="periodo">1º Tempo</div><div class="timer" id="timer">00:00</div><div class="actions" style="justify-content:center"><button class="green" onclick="iniciar()">Iniciar</button><button class="amber" onclick="pausar()">Pausar</button><button class="light" onclick="zerar()">Zerar</button><button class="purple" id="btnPeriodo" onclick="avancarPeriodo()">Encerrar 1º Tempo</button></div><div class="restart-row"><button class="restart" onclick="reiniciarPartida()">↻ Reiniciar partida</button></div></div>
 <div class="grid"><div class="card"><h2 id="hc"></h2><div id="lc"></div><div id="ec"></div></div><div class="card"><h2 id="hf"></h2><div id="lf"></div><div id="ef"></div></div></div>
 <div class="card" id="decisaoArea"></div><div class="card"><h2>Responsáveis e observações</h2><div class="grid"><div><label>Árbitro</label><input id="arb" oninput="salvarCampos()"><label>Mesário</label><input id="mes" oninput="salvarCampos()"></div><div><label id="lrc">Responsável mandante</label><input id="rc" oninput="salvarCampos()"><label id="lrf">Responsável visitante</label><input id="rf" oninput="salvarCampos()"></div></div><label>Ocorrências / observações</label><textarea id="obs" rows="4" oninput="salvarCampos()"></textarea></div>
 <div class="card"><div class="danger-note">Antes de finalizar, confira placar, gols, cartões e responsáveis.</div><div class="actions" style="margin-top:10px"><button class="green" onclick="finalizar()">Encerrar e exportar retorno</button><button class="primary" onclick="exportar(false)">Exportar parcial</button><button class="red" onclick="limparTudo()">Apagar partida deste aparelho</button></div></div>
@@ -71,13 +89,29 @@ function abrirDecisao(){
 function salvarDecisao(){let j=pacote.jogo,v=$("admV").value;if(!v)return alert("Selecione a equipe vencedora.");j.decisaoAdministrativa={vencedorTimeId:v,motivo:$("admM").value.trim(),descricao:$("admD").value.trim()};salvar();fecharModalEdicao();renderDecisao()}
 function removerDecisao(){if(!confirm("Remover a decisão administrativa?"))return;delete pacote.jogo.decisaoAdministrativa;salvar();renderDecisao()}
 function renderDecisao(){let el=$("decisaoArea");if(!el)return;let j=pacote.jogo,d=j.decisaoAdministrativa,n=d?.vencedorTimeId===j.casa.timeId?j.casa.nome:d?.vencedorTimeId===j.fora.timeId?j.fora.nome:"";el.innerHTML=`<h2>Decisão administrativa</h2>${n?`<div><strong>Vitória administrativa: ${esc(n)}</strong><br><small>${esc(d.motivo||"")} ${esc(d.descricao||"")}</small></div>`:"<small>Nenhuma decisão administrativa registrada.</small>"}<div class="actions"><button class="amber" onclick="abrirDecisao()">${n?"Editar decisão":"+ Registrar decisão"}</button>${n?`<button class="red" onclick="removerDecisao()">Remover</button>`:""}</div>`}
-function renderTopo(){let j=pacote.jogo;$("meta").innerHTML=`<strong>${esc(pacote.campeonato?.nome||"Campeonato")}</strong><br>${esc(j.categoria)} • ${esc(j.rodada||"")} • ${esc(dataBR(j.data))} ${esc(j.hora||"")}<br>${esc(j.local?.nome||"")}`;$("casaNome").textContent=j.casa.nome;$("foraNome").textContent=j.fora.nome;$("pc").textContent=j.placarCasa||0;$("pf").textContent=j.placarFora||0;$("timer").textContent=fmt(segAtual());$("periodo").textContent=periodoTxt();$("btnPeriodo").textContent=pacote.jogo.periodoAtual==="1T"?"Encerrar 1º Tempo":"2º Tempo em andamento";$("btnPeriodo").disabled=pacote.jogo.periodoAtual==="2T"}
+function renderTopo(){let j=pacote.jogo;
+ $("meta").innerHTML=`<div class="sumula-meta"><div class="meta-card"><strong>Categoria</strong><span>${esc(j.categoria||"-")}</span></div><div class="meta-card"><strong>Rodada</strong><span>${esc(j.rodada||"-")}</span></div><div class="meta-card"><strong>Horário</strong><span>${esc(j.hora||"-")}</span></div></div><div class="game-local">${esc(dataBR(j.data))}${j.local?.nome?" • "+esc(j.local.nome):""}</div>`;
+ $("casaNome").textContent=j.casa.nome;$("foraNome").textContent=j.fora.nome;$("pc").textContent=j.placarCasa||0;$("pf").textContent=j.placarFora||0;$("timer").textContent=fmt(segAtual());$("periodo").textContent=periodoTxt();$("btnPeriodo").textContent=pacote.jogo.periodoAtual==="1T"?"Encerrar 1º Tempo":"2º Tempo em andamento";$("btnPeriodo").disabled=pacote.jogo.periodoAtual==="2T"}
 function renderEventos(){$("ec").innerHTML=painelEventos("casa");$("ef").innerHTML=painelEventos("fora")}
 function render(){let j=pacote.jogo;renderTopo();$("hc").textContent=j.casa.nome;$("hf").textContent=j.fora.nome;$("lc").innerHTML=lista("casa");$("lf").innerHTML=lista("fora");renderEventos();renderDecisao();$("arb").value=j.responsaveisSumula.arbitro||"";$("mes").value=j.responsaveisSumula.mesario||"";$("rc").value=j.responsaveisSumula.responsavelCasa||"";$("rf").value=j.responsaveisSumula.responsavelFora||"";$("obs").value=j.observacoes||"";$("lrc").textContent="Responsável — "+j.casa.nome;$("lrf").textContent="Responsável — "+j.fora.nome}
 function salvarCampos(){let r=pacote.jogo.responsaveisSumula;r.arbitro=$("arb").value;r.mesario=$("mes").value;r.responsavelCasa=$("rc").value;r.responsavelFora=$("rf").value;pacote.jogo.observacoes=$("obs").value;salvar()}
 function baixar(obj,nome){let b=new Blob([JSON.stringify(obj,null,2)],{type:"application/json"}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=nome;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
 function exportar(encerrar){salvarCampos();pausar();let j=pacote.jogo;if(encerrar){j.status="Encerrado";j.encerradoEm=new Date().toISOString()}salvar();baixar(pacote,`retorno-mesario-${j.casa.nome}-x-${j.fora.nome}.json`)}
 function finalizar(){if(!confirm("Encerrar a partida e gerar o arquivo para retornar ao Gestor?"))return;exportar(true)}
+function reiniciarPartida(){
+ if(!pacote?.jogo)return;
+ if(!confirm("Reiniciar esta partida? O placar, gols, cartões, cronômetros, responsáveis, observações e decisão administrativa serão apagados. Equipes, atletas e numeração serão mantidos."))return;
+ clearInterval(cronInt);
+ let j=pacote.jogo;
+ j.status="Agendado";j.placarCasa=0;j.placarFora=0;j.gols=[];j.cartoes=[];j.observacoes="";
+ j.responsaveisSumula={arbitro:"",mesario:"",responsavelCasa:"",responsavelFora:""};
+ j.periodoAtual="1T";j.primeiroTempoEncerrado=false;
+ j.cronometros={"1T":{segundos:0,rodando:false,inicioTimestamp:null},"2T":{segundos:0,rodando:false,inicioTimestamp:null}};
+ j.cronometro=j.cronometros["1T"];
+ delete j.encerradoEm;delete j.decisaoAdministrativa;
+ if(Array.isArray(j.ocorrenciasAdministrativas))j.ocorrenciasAdministrativas=[];
+ salvar();render();alert("Partida reiniciada. A escalação e a numeração foram mantidas.");
+}
 function limparTudo(){if(!confirm("Apagar a partida salva neste aparelho?"))return;localStorage.removeItem(KEY);location.reload()}
 if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js"));
 </script></body></html>
